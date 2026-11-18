@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منصة مفتاح الجامعة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f6f4; --ink:#14231f; --muted:#5c6f69; --card:#ffffff; --line:#d5dfda;
+    --brand:#0e6b5c; --brand-ink:#ffffff; --gold:#c8962b;
+    --ok:#17794a; --ok-bg:#e3f4ea; --bad:#b3261e; --bad-bg:#fbe7e5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1a17; --ink:#e8f1ee; --muted:#9bb0a9; --card:#16251f; --line:#2a3d36;
+      --brand:#2fb59f; --brand-ink:#06201b; --gold:#e0b04a;
+      --ok:#5fd596; --ok-bg:#12372a; --bad:#ff8a80; --bad-bg:#3b1a17; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cairo",system-ui,sans-serif;line-height:1.8}
+  header{padding:28px 20px 8px;max-width:760px;margin:auto}
+  h1{margin:0;font-size:2rem;font-weight:800;letter-spacing:0}
+  h1 span{color:var(--gold)}
+  header p{margin:4px 0 0;color:var(--muted)}
+  main{max-width:760px;margin:auto;padding:16px 20px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+  .drop{display:block;border:2px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;color:var(--muted)}
+  .drop:hover,.drop:focus-within{border-color:var(--brand)}
+  .drop strong{display:block;color:var(--ink);font-size:1.05rem}
+  input[type=file]{display:none}
+  .row{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
+  select,button{font:inherit;border-radius:10px;border:1px solid var(--line);padding:10px 14px;background:var(--card);color:var(--ink)}
+  button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:600;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button:focus-visible,select:focus-visible,.opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .err{color:var(--bad);margin-top:12px}
+  .status{color:var(--muted);margin-top:12px}
+  .qhead{display:flex;justify-content:space-between;color:var(--muted);font-size:.9rem;margin-bottom:6px}
+  .q{font-size:1.15rem;font-weight:600;margin:0 0 14px}
+  .opt{display:block;width:100%;text-align:right;margin-bottom:10px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+  .opt:hover:not(:disabled){border-color:var(--brand)}
+  .opt.correct{background:var(--ok-bg);border-color:var(--ok)}
+  .opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+  .evidence{margin-top:12px;padding:12px 14px;border-inline-start:4px solid var(--gold);background:var(--bg);border-radius:8px;font-size:.95rem}
+  .evidence b{display:block;margin-bottom:2px}
+  .result{text-align:center}
+  .score{font-size:3rem;font-weight:800;color:var(--brand)}
+  .files{list-style:none;margin:14px 0 0;padding:0}
+  .files li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--bg)}
+  .files .nm{overflow-wrap:anywhere}
+  .files .sz{color:var(--muted);font-size:.85rem;white-space:nowrap}
+  .files button{padding:4px 10px}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>منصة <span>مفتاح</span> الجامعة</h1>
+  <p>ارفع ملزمتك، وخذ أسئلة اختيار من متعدد من نفس الملف، وكل جواب معه الدليل من نصك.</p>
+</header>
+
+<main>
+  <section class="card" id="upload">
+    <div class="drop" id="drop">
+      <strong id="fname">اسحب الملفات هنا أو اضغط الزر</strong>
+      <span>PDF أو Word أو TXT أو صور (حتى 10 ملفات، 100MB لكل ملف)</span>
+      <button type="button" id="pick" style="margin-top:12px">اختر ملفات</button>
+      <input type="file" id="file" multiple accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.gif,image/*,application/pdf">
+    </div>
+    <ul class="files" id="list" aria-live="polite"></ul>
+    <div class="err hidden" id="fileWarn">أنت فاتح الصفحة كملف مباشر. شغّل الخادم وافتح http://localhost:3000 حتى يشتغل الرفع والتوليد.</div>
+    <div class="row">
+      <label for="count">عدد الأسئلة</label>
+      <select id="count">
+        <option>5</option><option selected>10</option><option>20</option><option>30</option><option>40</option>
+      </select>
+      <button class="primary" id="go" disabled>ولّد الأسئلة</button>
+    </div>
+    <input id="code" type="password" placeholder="رمز الدخول" class="hidden" style="margin-top:12px;font:inherit;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);width:100%">
+    <div class="status hidden" id="status" role="status"></div>
+    <div class="err hidden" id="err" role="alert"></div>
+  </section>
+
+  <section class="card hidden" id="quiz"></section>
+  <section class="card result hidden" id="result"></section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let questions = [], idx = 0, score = 0;
+
+let files = [];
+if (location.protocol === "file:") $("fileWarn").classList.remove("hidden");
+const OK = /\.(pdf|docx|txt|md|png|jpe?g|webp|gif)$/i;
+const fmt = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
+function addFiles(list) {
+  $("err").classList.add("hidden");
+  const bad = [];
+  for (const f of Array.from(list)) {
+    if (!OK.test(f.name) && !f.type.startsWith("image/")) { bad.push(f.name); continue; }
+    if (files.length >= 10) break;
+    if (!files.some((x) => x.name === f.name && x.size === f.size)) files.push(f);
+  }
+  if (bad.length) { $("err").textContent = "نوع غير مدعوم: " + bad.join("، "); $("err").classList.remove("hidden"); }
+  renderList();
+}
+function renderList() {
+  const ul = $("list");
+  ul.innerHTML = "";
+  files.forEach((f, i) => {
+    const li = document.createElement("li");
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = f.name;
+    const sz = document.createElement("span"); sz.className = "sz"; sz.textContent = fmt(f.size);
+    const rm = document.createElement("button"); rm.type = "button"; rm.textContent = "حذف";
+    rm.addEventListener("click", () => { files.splice(i, 1); renderList(); });
+    li.append(nm, sz, rm);
+    ul.append(li);
+  });
+  $("go").disabled = !files.length;
+}
+$("pick").addEventListener("click", () => $("file").click());
+$("file").addEventListener("change", () => { addFiles($("file").files); $("file").value = ""; });
+["dragover", "drop"].forEach((ev) => $("drop").addEventListener(ev, (e) => {
+  e.preventDefault();
+  if (ev === "drop") addFiles(e.dataTransfer.files);
+}));
+
+$("go").addEventListener("click", async () => {
+  if (!files.length) return;
+  $("err").classList.add("hidden");
+  $("status").textContent = "جاري قراءة الملف وتوليد الأسئلة والتحقق منها... قد يستغرق دقيقة";
+  $("status").classList.remove("hidden");
+  $("go").disabled = true;
+  $("quiz").classList.add("hidden");
+  $("result").classList.add("hidden");
+
+  const fd = new FormData();
+  files.forEach((f) => fd.append("files", f));
+  fd.append("count", $("count").value);
+  try {
+    const r = await fetch("/api/generate", { method: "POST", body: fd, headers: { "x-access-code": $("code").value } });
+    const data = await r.json();
+    if (data.needCode) $("code").classList.remove("hidden");
+    if (!r.ok) throw new Error(data.error || "صار خطأ");
+    questions = data.questions; idx = 0; score = 0;
+    $("status").textContent = data.returned < data.requested
+      ? `تم توليد ${data.returned} سؤال فقط من ${data.requested}، لأن الباقي ما اجتاز التحقق من النص.`
+      : "";
+    if (!$("status").textContent) $("status").classList.add("hidden");
+    render();
+  } catch (e) {
+    $("status").classList.add("hidden");
+    $("err").textContent = e.message;
+    $("err").classList.remove("hidden");
+  } finally {
+    $("go").disabled = false;
+  }
+});
+
+function render() {
+  const q = questions[idx];
+  const box = $("quiz");
+  box.innerHTML = "";
+  box.classList.remove("hidden");
+
+  const head = document.createElement("div");
+  head.className = "qhead";
+  head.innerHTML = `<span>السؤال ${idx + 1} من ${questions.length}</span><span>الدرجة: ${score}</span>`;
+  const title = document.createElement("p");
+  title.className = "q";
+  title.textContent = q.question;
+  box.append(head, title);
+
+  const btns = q.options.map((text, i) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.textContent = text;
+    b.addEventListener("click", () => answer(i, btns, box));
+    box.append(b);
+    return b;
+  });
+}
+
+function answer(i, btns, box) {
+  const q = questions[idx];
+  btns.forEach((b, k) => {
+    b.disabled = true;
+    if (k === q.answerIndex) b.classList.add("correct");
+  });
+  if (i === q.answerIndex) score++;
+  else btns[i].classList.add("wrong");
+
+  const ev = document.createElement("div");
+  ev.className = "evidence";
+  const label = document.createElement("b");
+  label.textContent = "الدليل من ملفك:";
+  const quote = document.createElement("span");
+  quote.textContent = q.evidence;
+  ev.append(label, quote);
+
+  const next = document.createElement("button");
+  next.className = "primary";
+  next.style.marginTop = "14px";
+  next.textContent = idx + 1 < questions.length ? "السؤال التالي" : "عرض النتيجة";
+  next.addEventListener("click", () => {
+    idx++;
+    idx < questions.length ? render() : finish();
+  });
+  box.append(ev, next);
+}
+
+function finish() {
+  $("quiz").classList.add("hidden");
+  const r = $("result");
+  r.classList.remove("hidden");
+  r.innerHTML = `<div class="score">${score} / ${questions.length}</div>
+    <p>${Math.round((score / questions.length) * 100)}%</p>
+    <button class="primary" onclick="idx=0;score=0;$('result').classList.add('hidden');render()">أعد الاختبار</button>`;
+}
+</script>
+</body>
+</html>
